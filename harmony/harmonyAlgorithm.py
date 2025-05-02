@@ -17,12 +17,23 @@ terminating = Event()
 HarmonySearchResults = namedtuple('HarmonySearchResults', ['elapsed_time', 'best_harmony', 'best_fitness', 'harmony_memories', 'harmony_histories'])
 
 
-def harmony_search_serial(objective_function, num_iterations, initial_harmonies=None):
+def harmony_search_serial(objective_function, num_iterations, hsa_test_data, initial_harmonies=None):
     """
         Same as ``harmony_search`` but without multiprocessing. This could be useful when there's already multiprocessing in, e.g.,
         ``get_fitness`` method in ``objective_function``, since multiprocessing cannot be used within multiprocessing.
     """
     start = datetime.now()
+    for iteration in range(num_iterations):
+        # Run Harmony Search for one iteration
+        result = HarmonySearch(objective_function).run(initial_harmonies=initial_harmonies)
+        harmony, fitness, harmony_memory, harmony_history = result
+
+
+        # Add the result of this iteration to hsa_test_data
+        new_row = {"index": iteration + 1, "Best Harmony (Path) ": harmony,
+                                                 "Best Fitness (Cost) ": fitness}
+        hsa_test_data.loc[len(hsa_test_data)] = new_row
+    # re-do the whole harmonySearch to get results as a list
     results = [HarmonySearch(objective_function).run(initial_harmonies=initial_harmonies) for _ in range(num_iterations)]
     #results = [worker(objective_function, initial_harmonies) for i in range(num_iterations)]
     end = datetime.now()
@@ -41,7 +52,7 @@ def harmony_search_serial(objective_function, num_iterations, initial_harmonies=
         harmony_memories.append(harmony_memory)
         harmony_histories.append(harmony_history)
 
-    return HarmonySearchResults(elapsed_time=elapsed_time, best_harmony=best_harmony, best_fitness=best_fitness, harmony_memories=harmony_memories, harmony_histories=harmony_histories)
+    return hsa_test_data, HarmonySearchResults(elapsed_time=elapsed_time, best_harmony=best_harmony, best_fitness=best_fitness, harmony_memories=harmony_memories, harmony_histories=harmony_histories)
 
 
 def worker(objective_function, initial_harmonies=None):

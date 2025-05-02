@@ -143,12 +143,14 @@ def remove_degree_one_nodes(graph):
             if neighbors:
                 graph.remove_edge(node, neighbors[0])
         degree_one_nodes = [node for node, degree in dict(graph.degree()).items() if degree == 1]
+    return graph
 
 def remove_degree_zero_nodes(graph):
     # Identify nodes with degree 0
     degree_zero_nodes = [node for node, degree in dict(graph.degree()).items() if degree == 0]
     # Remove nodes with degree 0
     graph.remove_nodes_from(degree_zero_nodes)
+    return graph
 
 if __name__ == "__main__":
     '''
@@ -156,6 +158,8 @@ if __name__ == "__main__":
     '''
     vrpSize = 10 # Number of nodes
     Gn = nx.Graph()
+    GnCuckoo = nx.Graph()
+
 
 
     # Ensure all nodes are connected using a Minimum Spanning Tree (MST)
@@ -163,31 +167,48 @@ if __name__ == "__main__":
     for (u, v) in complete_graph.edges():
         complete_graph[u][v]['weight'] = random.randint(1, 10)
     mst = nx.minimum_spanning_tree(complete_graph)
-    Gn.add_edges_from(mst.edges(data=True))
+
+    # minimum spanning tree for cuckooAlgorithm
+    GnCuckoo.add_edges_from(mst.edges(data=True))
+
+    # continuing with fully connected graph
+    Gn = complete_graph
 
 
     # Add additional random edges
     additional_edges = randomEdges(Gn, 20, vrpSize, 1, 10)
+    additional_edges_Cuckoo = randomEdges(GnCuckoo, 20, vrpSize, 1, 10)
     Gn.add_edges_from(additional_edges)
+    GnCuckoo.add_edges_from(additional_edges_Cuckoo)
 
     # Remove vertices with degree 1
-    remove_degree_one_nodes(Gn)
+    Gn = remove_degree_one_nodes(Gn)
+    GnCuckoo = remove_degree_one_nodes(GnCuckoo)
     # Remove vertices with degree 0
-    remove_degree_zero_nodes(Gn)
+    Gn = remove_degree_zero_nodes(Gn)
+    GnCuckoo = remove_degree_zero_nodes(GnCuckoo)
 
     # Automatically generate positions for all nodes
     pos = nx.spring_layout(Gn)  # You can also use nx.circular_layout(Gn) or other layouts
+    posCuckoo = nx.spring_layout(GnCuckoo)
 
 
-    # Draw the graph
+    # Draw both graphs
     plt.figure(figsize=(80, 60))
     nx.draw(Gn, pos, with_labels=True, node_color='lightblue', node_size=1000, font_weight='bold')
     nx.draw_networkx_edge_labels(
         Gn, pos, edge_labels={(u, v): d for u, v, d in Gn.edges(data='weight')}
     )
 
+    plt.figure(figsize=(80, 60))
+    nx.draw(GnCuckoo, pos, with_labels=True, node_color='lightblue', node_size=1000, font_weight='bold')
+    nx.draw_networkx_edge_labels(
+        GnCuckoo, pos, edge_labels={(u, v): d for u, v, d in GnCuckoo.edges(data='weight')}
+    )
+
     # Highlight the depot
     nx.draw_networkx_nodes(Gn, pos, nodelist=[0], node_color='orange', node_size=1200, label='Depot')
+    nx.draw_networkx_nodes(GnCuckoo, pos, nodelist=[0], node_color='orange', node_size=1200, label='Depot')
 
     plt.title("Random VRP Graph with Depot (Node 0)")
     plt.axis('off')
@@ -207,10 +228,10 @@ if __name__ == "__main__":
     '''
     Cuckoo Search Algorithm
     '''
-    #csa_test_data = pd.DataFrame(columns=["index", "iterations", "fitness_value", "test_cases"])
+    csa_test_data = pd.DataFrame(columns=["index", "iterations", "fitness_value", "test_cases"])
 
-    #for i in range(10):
-    #    i = i + 1
-    #    new_row = {"index": i, "iterations": "ITERATION_" + i.__str__(), "fitness_value": "ITERATION_" + i.__str__(), "test_cases": "ITERATION_" + i.__str__()}
-    #    csa_test_data.loc[len(csa_test_data)] = new_row
-    #    doCuckooSearchForOneGraph(Gn, i, csa_test_data)
+    for i in range(10):
+        i = i + 1
+        new_row = {"index": i, "iterations": "ITERATION_" + i.__str__(), "fitness_value": "ITERATION_" + i.__str__(), "test_cases": "ITERATION_" + i.__str__()}
+        csa_test_data.loc[len(csa_test_data)] = new_row
+        doCuckooSearchForOneGraph(GnCuckoo, i, csa_test_data)

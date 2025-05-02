@@ -80,7 +80,10 @@ class GraphObjectiveFunction(ObjectiveFunctionInterface):
 
         # Run Harmony Search
         iteration = 10
-        results = harmony_search_serial(objective_function, iteration,None)
+        hsa_test_data, results = harmony_search_serial(objective_function, iteration, hsa_test_data,None)
+
+        hsa_test_data.loc[len(hsa_test_data)] = {"index": "NOW", "Best Harmony (Path) ": "THE OPTIMIZED",
+                                                 "Best Fitness (Cost) ": "RESULTS"}
 
         # Extract relevant data from HarmonySearchResults
         new_row = {
