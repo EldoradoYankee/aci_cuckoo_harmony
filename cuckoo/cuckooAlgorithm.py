@@ -6,6 +6,9 @@ import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from graphs.GraphObjectFunction import GraphObjectiveFunction
+from harmony.harmonyAlgorithm import harmony_search_serial
+
 
 class Cuckoo:
     def __init__(self, path, G, eps=0.9):
@@ -96,6 +99,30 @@ class CuckooSearch:
 
         return best_path[:last_node_index], best_fitness
 
+
+
+def doCuckooSearchForOneGraph(Gn, iteration, csa_test_data):
+    csa = CuckooSearch(Gn, num_cuckoos=30, max_iterations=1000, beta=0.27)
+
+    start = datetime.datetime.now()
+    best_path, best_fitness = csa.optimize()
+    end = datetime.datetime.now()
+
+    csa_time = end - start
+
+    # Save results to DataFrame
+    for result in csa.test_results:
+        new_row = {"index": iteration, "iterations": result[0], "fitness_value": result[1], "test_cases": result[2]}
+        csa_test_data.loc[len(csa_test_data)] = new_row
+
+    print("Optimal path for iteration " + str(iteration) +  ": ", best_path)
+    print("Optimal path cost for iteration " + str(iteration) + ": ", best_fitness)
+    print("CSA total Exec time for iteration " + str(iteration) + " => ", csa_time.total_seconds())
+    csa_test_data.to_csv("csa_test_data_results.csv")
+
+
+
+
 def randomEdges(graph, edgeNumber, vrpSize, weightMin, weightMax):
     # Generate additional random edges with weights
     edges = []
@@ -127,7 +154,7 @@ if __name__ == "__main__":
     '''
     Graph Creation
     '''
-    vrpSize = 100 # Number of nodes
+    vrpSize = 10 # Number of nodes
     Gn = nx.Graph()
 
 
@@ -166,17 +193,24 @@ if __name__ == "__main__":
     plt.axis('off')
     plt.show()
 
-    #csa = CuckooSearch(Gn, num_cuckoos=30, max_iterations=1000, beta=0.27)
+    print("Graph created with nodes and edges.")
 
-    #start = datetime.datetime.now()
-    #best_path, best_fitness = csa.optimize()
-    #end = datetime.datetime.now()
+    '''
+    Harmony Search Algorithm
+    '''
+    # Create a DataFrame to store test data
+    hsa_test_data = pd.DataFrame(columns=["index", "Best Harmony (Path) ", "Best Fitness (Cost) "])
 
-    #csa_time = end - start
+    # Run the Harmony Search for 10 (hardcoded) iterations
+    GraphObjectiveFunction.doHarmonySearchForOneGraph(Gn, hsa_test_data)
 
-    #csa_test_data = pd.DataFrame(csa.test_results, columns=["iterations", "fitness_value", "test_cases"])
+    '''
+    Cuckoo Search Algorithm
+    '''
+    #csa_test_data = pd.DataFrame(columns=["index", "iterations", "fitness_value", "test_cases"])
 
-    #print("Optimal path: ", best_path)
-    #print("Optimal path cost: ", best_fitness)
-    #print("CSA total Exec time => ", csa_time.total_seconds())
-    #csa_test_data.to_csv("csa_test_data_results.csv")
+    #for i in range(10):
+    #    i = i + 1
+    #    new_row = {"index": i, "iterations": "ITERATION_" + i.__str__(), "fitness_value": "ITERATION_" + i.__str__(), "test_cases": "ITERATION_" + i.__str__()}
+    #    csa_test_data.loc[len(csa_test_data)] = new_row
+    #    doCuckooSearchForOneGraph(Gn, i, csa_test_data)
